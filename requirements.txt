@@ -1,0 +1,15 @@
+django
+django_rest-framework
+psycopg2-binary
+sqlalchemy
+docker
+celery
+drf-yasg
+python-decouple
+djangorestframework-simplejwt
+dj_database_url
+celery[redis]
+redis
+stripe
+pillow
+django-filter

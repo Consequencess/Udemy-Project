@@ -1,0 +1,79 @@
+variables:
+  # DJANGO_CONFIG: "test"
+  MYSQL_DATABASE: $MYSQL_DB
+  MYSQL_ROOT_PASSWORD: $MYSQL_PASS
+  MYSQL_USER: $MYSQL_USER
+  MYSQL_PASSWORD: $MYSQL_PASS
+
+default:
+  image: ubuntu:20.04
+  #
+  # Pick zero or more services to be used on all builds.
+  # Only needed when using a docker container to run your tests in.
+  # Check out: https://docs.gitlab.com/ee/ci/services/index.html
+  services:
+    - mysql:8.0
+  #
+  # This folder is cached between builds
+  # http://docs.gitlab.com/ee/ci/yaml/README.html#cache
+  cache:
+    paths:
+      - ~/.cache/pip/
+  before_script:
+    - apt -y update
+    - apt -y install apt-utils
+    - apt -y install net-tools python3.8 python3-pip mysql-client libmysqlclient-dev
+    - apt -y upgrade
+    - pip3 install -r requirements.txt
+
+
+migrations:
+  stage: build
+  script:
+    - python3 manage.py makemigrations
+    # - python3 manage.py makemigrations myapp
+    - python3 manage.py migrate
+    - python3 manage.py check
+
+
+django-tests:
+  stage: test
+  script:
+    # The MYSQL user only gets permissions for MYSQL_DB, so Django can't create a test database.
+    - echo "GRANT ALL on *.* to '${MYSQL_USER}';"| mysql -u root --password="${MYSQL_ROOT_PASSWORD}" -h mysql
+    # use python3 explicitly. see https://wiki.ubuntu.com/Python/3
+    - python3 manage.py test
+
+deploy:
+  stage: deploy
+  script: echo "Define your deployment script!"
+  environment: production
+
+
+
+docker-build:
+  # Use the official docker image.
+  image: docker:latest
+  stage: build
+  services:
+    - docker:dind
+  before_script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+  # Default branch leaves tag empty (= latest tag)
+  # All other branches are tagged with the escaped branch name (commit ref slug)
+  script:
+    - |
+      if [[ "$CI_COMMIT_BRANCH" == "$CI_DEFAULT_BRANCH" ]]; then
+        tag=""
+        echo "Running on default branch '$CI_DEFAULT_BRANCH': tag = 'latest'"
+      else
+        tag=":$CI_COMMIT_REF_SLUG"
+        echo "Running on branch '$CI_COMMIT_BRANCH': tag = $tag"
+      fi
+    - docker build --pull -t "$CI_REGISTRY_IMAGE${tag}" .
+    - docker push "$CI_REGISTRY_IMAGE${tag}"
+  # Run this job in a branch where a Dockerfile exists
+  rules:
+    - if: $CI_COMMIT_BRANCH
+      exists:
+        - Dockerfile
