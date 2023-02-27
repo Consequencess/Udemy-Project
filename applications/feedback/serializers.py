@@ -52,7 +52,6 @@ class WishlistSerializer(serializers.ModelSerializer):
     title = serializers.CharField(source='course.title')
     teacher = serializers.CharField(source='course.user.first_name')
     rating = serializers.SerializerMethodField()
-    # ratings = serializers.IntegerField(source='course.ratings')
     price = serializers.DecimalField(source='course.price', max_digits=6, decimal_places=2)
     id = serializers.IntegerField(source='course.id')
 
