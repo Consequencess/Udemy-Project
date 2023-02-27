@@ -1,10 +1,11 @@
+from django.db.models import Avg
 from rest_framework import serializers
-
-from applications.feedback.models import Rating, LikeDislikeComment, Comment, Archive
+from applications.feedback.models import Rating, LikeDislikeComment, Comment, Wishlist
 
 
 class CommentSerializer(serializers.ModelSerializer):
     owner = serializers.CharField(required=False)
+
 
     class Meta:
         model = Comment
@@ -46,14 +47,25 @@ class RatingSerializer(serializers.ModelSerializer):
         fields = ['rating', 'course']
 
 
-class ArchiveSerializer(serializers.ModelSerializer):
+class WishlistSerializer(serializers.ModelSerializer):
+    image = serializers.ImageField(source='course.image')
+    title = serializers.CharField(source='course.title')
+    teacher = serializers.CharField(source='course.user.first_name')
+    rating = serializers.SerializerMethodField()
+    # ratings = serializers.IntegerField(source='course.ratings')
+    price = serializers.DecimalField(source='course.price', max_digits=6, decimal_places=2)
+    id = serializers.IntegerField(source='course.id')
 
     class Meta:
-        model = Archive
-        fields = '__all__'
+        model = Wishlist
+        fields = ['image', 'title', 'teacher', 'rating', 'price', 'id']
+
+    def get_rating(self, obj):
+        rating = obj.course.ratings.all().aggregate(Avg('rating'))['rating__avg']
+        return round(rating, 1) if rating is not None else None
 
     def to_representation(self, instance):
         rep = super().to_representation(instance)
-        rep['owner'] = instance.owner.email
-        rep['course'] = instance.course.title
         return rep
+
+

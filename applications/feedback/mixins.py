@@ -2,7 +2,7 @@ from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from applications.feedback.models import Archive, Rating, LikeDislikeComment
+from applications.feedback.models import Rating, LikeDislikeComment, Wishlist
 from applications.feedback.serializers import RatingSerializer
 
 
@@ -29,10 +29,21 @@ class RatingMixin:
         return Response(request.data, status=status.HTTP_201_CREATED)
 
 
-class ArchiveMixin:
+class WishlistMixin:
+
     @action(detail=True, methods=['POST'])
     def post(self, request, pk, *args, **kwargs):
-        obj, _ = Archive.objects.get_or_create(course_id=pk, owner=request.user)
+        obj, _ = Wishlist.objects.get_or_create(course_id=pk, owner=request.user)
         obj.save()
-        status_ = 'Добавлено'
+        status_ = 'Added to wishlist'
+        return Response({'msg': status_})
+
+    @action(detail=True, methods=['DELETE'])
+    def delete(self, request, pk, *args, **kwargs):
+        try:
+            obj = Wishlist.objects.get(course_id=pk, owner=request.user)
+            obj.delete()
+            status_ = 'Removed from wishlist'
+        except Wishlist.DoesNotExist:
+            status_ = 'Not found in wishlist'
         return Response({'msg': status_})

@@ -1,7 +1,7 @@
 from rest_framework.permissions import BasePermission
 
 
-class IsCommentArchiveOwner(BasePermission):
+class IsCommentFavoriteOwner(BasePermission):
     def has_permission(self, request, view):
         return request.user.is_authenticated
 

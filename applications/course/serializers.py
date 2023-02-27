@@ -53,16 +53,36 @@ class CourseItemSerializer(serializers.ModelSerializer):
 
 class CoursesSerializer(serializers.ModelSerializer):
     owner = serializers.ReadOnlyField(source='owner.email')
+    ratings_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Course
         fields = '__all__'
 
+    def get_ratings_count(self, obj):
+        return obj.ratings.count()
+
     def to_representation(self, instance):
         rep = super().to_representation(instance)
-        rep['ratings'] = instance.ratings.all().aggregate(Avg('rating'))['rating__avg']
+        rep['rating'] = instance.ratings.all().aggregate(Avg('rating'))['rating__avg']
         rep['teacher'] = instance.user.first_name
         rep['category'] = instance.category.title
         rep['theme'] = instance.theme.title
         return rep
+
+
+# class CoursesSerializer(serializers.ModelSerializer):
+#     owner = serializers.ReadOnlyField(source='owner.email')
+#
+#     class Meta:
+#         model = Course
+#         fields = '__all__'
+#
+#     def to_representation(self, instance):
+#         rep = super().to_representation(instance)
+#         rep['ratings'] = instance.ratings.all().aggregate(Avg('rating'))['rating__avg']
+#         rep['teacher'] = instance.user.first_name
+#         rep['category'] = instance.category.title
+#         rep['theme'] = instance.theme.title
+#         return rep
 

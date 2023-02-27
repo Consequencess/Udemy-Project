@@ -7,7 +7,7 @@ router = DefaultRouter()
 router.register('comment', views.CommentViewSet, basename='comments')
 router.register('like_comment', views.LikeDislikeCommentAPIView, basename='like_comment')
 router.register('rating', views.RatingAPIView, basename='ratings')
-router.register('archive', views.ArchiveAPIView, basename='archive')
+router.register('wishlist', views.WishlistAPIView, basename='wishlists')
 
 urlpatterns = [
     path('', include(router.urls))

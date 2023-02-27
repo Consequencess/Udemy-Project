@@ -26,6 +26,8 @@ class LikeDislikeComment(models.Model):
     like = models.BooleanField(default=False)
 
 
-class Archive(models.Model):
-    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='archives')
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='archives')
+class Wishlist(models.Model):
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='wishlist')
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='wishlist')
+
+
